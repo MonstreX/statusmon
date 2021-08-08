@@ -71,14 +71,15 @@ for www in ${sslwebsites[@]}; do
   expirationdate=$(date -d "$(: | openssl s_client -connect $www:443 -servername $www 2>/dev/null | openssl x509 -text | grep 'Not After' | awk '{print $4,$5,$7}')" '+%s')
 
   in7days=$(($(date +%s) + (86400*$ssldays)));
+  daysleft=$((($expirationdate-$(date "+%s"))/(60*60*24)))
 
   site=$(echo "$www" | sed 's/\./_/g')
 
   if [ $in7days -gt $expirationdate ]; then
-    result+="<b>$site</b>: - Certificate expires in less than $ssldays days, on $(date -d @$expirationdate '+%d %b %Y')%0A"
-    ((errors=errors+1))
+          result+="<b>$site</b>: Certificate expires in less than $ssldays days, on $(date -d @$expirationdate '+%d %b %Y'), <b>$daysleft</b> days left.%0A"
+          ((errors=errors+1))
   else
-    result+="<b>$site</b>: - OK, Expires on $(date -d @$expirationdate '+%d %b %Y')%0A"
+        result+="<b>$site</b>: OK, Expires on $(date -d @$expirationdate '+%d %b %Y'), <b>$daysleft</b> days left.%0A"
   fi
 done
 

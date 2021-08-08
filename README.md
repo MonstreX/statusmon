@@ -1,0 +1,2 @@
+# statusmon
+Server services monitor

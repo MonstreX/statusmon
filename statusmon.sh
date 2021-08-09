@@ -65,23 +65,32 @@ for www in ${websites[@]}; do
 done
 
 # SSL Check
-result+="%0A<b>SSL Expiration check</b>:%0A"
+old_date=$(<date.txt)
+cur_date=`date '+%d %b %Y'`
 
-for www in ${sslwebsites[@]}; do
-  expirationdate=$(date -d "$(: | openssl s_client -connect $www:443 -servername $www 2>/dev/null | openssl x509 -text | grep 'Not After' | awk '{print $4,$5,$7}')" '+%s')
+if [[ $cur_date != $old_date ]]; then
 
-  in7days=$(($(date +%s) + (86400*$ssldays)));
-  daysleft=$((($expirationdate-$(date "+%s"))/(60*60*24)))
+  echo $cur_date > date.txt
+  result+="%0A<b>SSL Expiration</b>:%0A"
 
-  site=$(echo "$www" | sed 's/\./_/g')
+  for www in ${sslwebsites[@]}; do
+    expirationdate=$(date -d "$(: | openssl s_client -connect $www:443 -servername $www 2>/dev/null | openssl x509 -text | grep 'Not After' | awk '{print $4,$5,$7}')" '+$')
 
-  if [ $in7days -gt $expirationdate ]; then
-          result+="<b>$site</b>: Certificate expires in less than $ssldays days, on $(date -d @$expirationdate '+%d %b %Y'), <b>$daysleft</b> days left.%0A"
-          ((errors=errors+1))
-  else
-        result+="<b>$site</b>: OK, Expires on $(date -d @$expirationdate '+%d %b %Y'), <b>$daysleft</b> days left.%0A"
-  fi
-done
+    in7days=$(($(date +%s) + (86400*$ssldays)));
+
+    daysleft=$((($expirationdate-$(date "+%s"))/(60*60*24)))
+
+    site=$(echo "$www" | sed 's/\./_/g')
+
+    if [ $in7days -gt $expirationdate ]; then
+      result+="<b>$site</b>: Certificate expires in less than $ssldays days, on $(date -d @$expirationdate '+%d %b %Y'), <b>$daysleft</b> days left.%0A"
+      ((errors=errors+1))
+    else
+      result+="<b>$site</b>: OK, Expires on $(date -d @$expirationdate '+%d %b %Y'), <b>$daysleft</b> days left.%0A"
+    fi
+  done
+fi
+
 
 #SMTP Check
 result+="%0A<b>E-Mail services</b>:%0A"

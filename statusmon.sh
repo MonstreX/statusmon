@@ -1,6 +1,6 @@
 #!/bin/bash
 # Monitor servers states
-#
+# should run once per hour (in order to run SSL Check once per day)
 
 # Hosts/www pages check settings
 websites[0]=google.com
@@ -13,6 +13,8 @@ sslwebsites[0]=google.com
 sslwebsites[1]=nextsite.com
 
 ssldays=3
+
+sslrunhour="06"
 
 # SMTP Check settings
 smtphosts[0]="smtp.gmail.com"
@@ -68,9 +70,8 @@ done
 old_date=$(<date.txt)
 cur_date=`date '+%d %b %Y'`
 
-if [[ $cur_date != $old_date ]]; then
+if [[ $sslrunhour == $(date "+%H") ]]; then
 
-  echo $cur_date > date.txt
   result+="%0A<b>SSL Expiration</b>:%0A"
 
   for www in ${sslwebsites[@]}; do
